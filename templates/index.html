@@ -1,27 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Car Parking Management</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <title>Car Parking Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>🚘 Car Parking Management</h1>
-    <nav>
-        <a href="/">Home</a> |
-        <a href="/add_slot">Add Slot</a> |
-        <a href="/park_vehicle">Park Vehicle</a> |
-        <a href="/view_slots">View Slots</a>
-    </nav>
+  <div class="container">
+    <h1>🚗 Car Parking Management System</h1>
 
-    <h2>All Slots</h2>
-    <table>
-        <tr><th>Slot Number</th><th>Status</th></tr>
-        {% for slot in slots %}
-        <tr>
-            <td>{{ slot.slot_number }}</td>
-            <td>{{ slot.status }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="menu">
+      <a href="{{ url_for('add_slot') }}" class="btn">Add Parking Slot</a>
+      <a href="{{ url_for('park_vehicle') }}" class="btn">Park a Vehicle</a>
+      <a href="{{ url_for('view_slots') }}" class="btn">View Slots</a>
+    </div>
+  </div>
 </body>
 </html>

@@ -1,22 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Park Vehicle</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <title>Park Vehicle</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <div class="container">
     <h1>Park a Vehicle</h1>
-    <form method="POST">
-        <input type="text" name="owner_name" placeholder="Owner Name" required><br><br>
-        <input type="text" name="vehicle_number" placeholder="Vehicle Number" required><br><br>
-        <label>Select Slot:</label>
-        <select name="slot_number" required>
-            {% for slot in slots %}
-            <option value="{{ slot.slot_number }}">{{ slot.slot_number }}</option>
-            {% endfor %}
-        </select><br><br>
-        <button type="submit">Park Vehicle</button>
+
+    <form action="{{ url_for('park_vehicle') }}" method="POST">
+      <label>Vehicle Number:</label>
+      <input type="text" name="vehicle_no" placeholder="Enter Vehicle Number" required>
+
+      <label>Select Slot:</label>
+      <select name="slot_no" required>
+        {% for s in slots %}
+          <option value="{{ s[0] }}">{{ s[0] }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit" class="btn">Park Vehicle</button>
     </form>
-    <a href="/">Back</a>
+
+    <a href="{{ url_for('view_slots') }}" class="btn secondary">Back to Slots</a>
+  </div>
 </body>
 </html>
