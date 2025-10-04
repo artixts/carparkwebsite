@@ -1,17 +1,18 @@
 from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
+import os
 from datetime import datetime
 
 app = Flask(__name__)
 
+# MySQL connection using environment variables
 conn = mysql.connector.connect(
-    host="localhost",
-    user="root",      
-    password="",   
-    database="ccar_parking"
+    host=os.getenv("DB_HOST", "localhost"),
+    user=os.getenv("DB_USER", "root"),
+    password=os.getenv("DB_PASSWORD", ""),
+    database=os.getenv("DB_NAME", "ccar_parking")
 )
 cursor = conn.cursor(dictionary=True)
-
 
 @app.route('/')
 def home():
@@ -23,7 +24,8 @@ def home():
 def add_slot():
     if request.method == 'POST':
         slot_number = request.form['slot_number']
-        cursor.execute("INSERT INTO slots (slot_number) VALUES (%s)", (slot_number,))
+        status = request.form['status']
+        cursor.execute("INSERT INTO slots (slot_number, status) VALUES (%s, %s)", (slot_number, status))
         conn.commit()
         return redirect(url_for('home'))
     return render_template('add_slot.html')
@@ -31,49 +33,45 @@ def add_slot():
 @app.route('/park_vehicle', methods=['GET', 'POST'])
 def park_vehicle():
     if request.method == 'POST':
-        owner_name = request.form['owner_name']
         vehicle_number = request.form['vehicle_number']
-        slot_number = request.form['slot_number']
-
-        cursor.execute("SELECT slot_id, status FROM slots WHERE slot_number=%s", (slot_number,))
-        slot = cursor.fetchone()
-
-        if not slot or slot['status'] == 'Occupied':
-            return "Slot not available!"
-
+        slot_id = request.form['slot_id']
+        time_in = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute(
-            "INSERT INTO vehicles (owner_name, vehicle_number, slot_id) VALUES (%s, %s, %s)",
-            (owner_name, vehicle_number, slot['slot_id'])
+            "INSERT INTO parked_vehicles (vehicle_number, slot_id, time_in) VALUES (%s, %s, %s)",
+            (vehicle_number, slot_id, time_in)
         )
-        cursor.execute("UPDATE slots SET status='Occupied' WHERE slot_id=%s", (slot['slot_id'],))
+        cursor.execute("UPDATE slots SET status='Occupied' WHERE id=%s", (slot_id,))
         conn.commit()
         return redirect(url_for('home'))
-
-    cursor.execute("SELECT slot_number FROM slots WHERE status='Available'")
+    cursor.execute("SELECT * FROM slots WHERE status='Available'")
     slots = cursor.fetchall()
     return render_template('park_vehicle.html', slots=slots)
 
-@app.route('/remove_vehicle/<vehicle_number>')
-def remove_vehicle(vehicle_number):
-    cursor.execute("SELECT slot_id FROM vehicles WHERE vehicle_number=%s AND exit_time IS NULL", (vehicle_number,))
-    result = cursor.fetchone()
-    if result:
-        slot_id = result['slot_id']
-        cursor.execute("UPDATE vehicles SET exit_time=%s WHERE vehicle_number=%s", (datetime.now(), vehicle_number))
-        cursor.execute("UPDATE slots SET status='Available' WHERE slot_id=%s", (slot_id,))
-        conn.commit()
-    return redirect(url_for('home'))
-
 @app.route('/view_slots')
 def view_slots():
-    cursor.execute("""
-        SELECT s.slot_number, s.status, v.owner_name, v.vehicle_number, v.entry_time, v.exit_time
-        FROM slots s
-        LEFT JOIN vehicles v ON s.slot_id = v.slot_id AND v.exit_time IS NULL
-    """)
-    data = cursor.fetchall()
-    return render_template('view_slots.html', data=data)
+    cursor.execute("SELECT * FROM slots")
+    slots = cursor.fetchall()
+    return render_template('view_slots.html', slots=slots)
 
-if __name__ == '__main__':
-   app.run(host='0.0.0.0', port=5000, debug=True)
+@app.route('/edit_slot/<int:id>', methods=['GET', 'POST'])
+def edit_slot(id):
+    cursor.execute("SELECT * FROM slots WHERE id=%s", (id,))
+    slot = cursor.fetchone()
+    if request.method == 'POST':
+        slot_number = request.form['slot_number']
+        status = request.form['status']
+        cursor.execute("UPDATE slots SET slot_number=%s, status=%s WHERE id=%s", (slot_number, status, id))
+        conn.commit()
+        return redirect(url_for('home'))
+    return render_template('add_slot.html', slot=slot)
 
+@app.route('/delete_slot/<int:id>')
+def delete_slot(id):
+    cursor.execute("DELETE FROM slots WHERE id=%s", (id,))
+    conn.commit()
+    return redirect(url_for('home'))
+
+# For Render deployment
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
