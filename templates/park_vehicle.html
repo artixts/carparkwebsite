@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Park Vehicle</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Park a Vehicle</h1>
+    <form method="POST">
+        <input type="text" name="owner_name" placeholder="Owner Name" required><br><br>
+        <input type="text" name="vehicle_number" placeholder="Vehicle Number" required><br><br>
+        <label>Select Slot:</label>
+        <select name="slot_number" required>
+            {% for slot in slots %}
+            <option value="{{ slot.slot_number }}">{{ slot.slot_number }}</option>
+            {% endfor %}
+        </select><br><br>
+        <button type="submit">Park Vehicle</button>
+    </form>
+    <a href="/">Back</a>
+</body>
+</html>

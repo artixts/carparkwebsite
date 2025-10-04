@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Slots</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>All Parking Slots</h1>
+    <table>
+        <tr>
+            <th>Slot Number</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th>Vehicle</th>
+            <th>Entry Time</th>
+            <th>Action</th>
+        </tr>
+        {% for row in data %}
+        <tr>
+            <td>{{ row.slot_number }}</td>
+            <td>{{ row.status }}</td>
+            <td>{{ row.owner_name or '-' }}</td>
+            <td>{{ row.vehicle_number or '-' }}</td>
+            <td>{{ row.entry_time or '-' }}</td>
+            <td>
+                {% if row.vehicle_number %}
+                    <a href="/remove_vehicle/{{ row.vehicle_number }}">Remove</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="/">Back</a>
+</body>
+</html>
